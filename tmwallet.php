@@ -2,7 +2,7 @@
 ob_start();
 session_start();
 header("Content-type: text/html; charset=utf-8");
-error_reporting(0);
+error_reporting(0); //ถ้าจอขาว ให้เปลี่ยนค่าเป็น 1 เพื่อแสดงค่า error
 set_time_limit(0);
 $datenow=date("Y-m-d");
 $transaction_leng=14;
@@ -17,13 +17,18 @@ $tmpapi_assword="xxxxxx"; // รหัสผ่าน
 //ข้อมูล บัญชี True money Wallet ของเว็บ App Truemoneywallet ต้องกรอกให้ถูกต้อง เพราะอาจทำให้บัญชี True money  ของท่านถูกระงับได้
 $truewall_email=""; // Email ที่ใช้กับ  App Truemoneywallet
 $truewall_phone=""; // เบอร์โทรที่ไว้รับยอดกับ True money Wallet เป็นเบอร์ที่สมัครคู่กับ Email ก่อนหน้า
-$truepassword="tmpwokNeqcDRh[sa]HQ[pl]hsQzUxnLGKg[tr][tr]"; // รหัสผ่าน ต้องนำรหัสผ่าน True money Wallet ของท่านไปเข้ารหัสความปลอดภัยที่ https://www.tmweasy.com/encode.php ก่อนแล้วนำcodeที่ได้หลังเข้ารหัสมาใส่ตรงนี้ได้เลย  รูปแบบ tmpw..................
+$truepassword=""; // รหัสผ่าน ต้องนำรหัสผ่าน True money Wallet ของท่านไปเข้ารหัสความปลอดภัยที่ https://www.tmweasy.com/encode.php ก่อนแล้วนำcodeที่ได้หลังเข้ารหัสมาใส่ตรงนี้ได้เลย  รูปแบบ tmpw..................
 
 //config ฐานข้อมูล
 $sql_server="localhost";
 $sql_user="";
 $sql_password="";
 $sql_database="";
+$database_type=1; //ชนิดการเชื่อมต่อฐานข้อมูล 1 = Mysql, 2 = Mysqli , 3 = Mssql , 4 = Odbc Sqlserver
+$database_table="";//ตารางที่ต้องการให้อัพเดทพ้อย
+$database_idfield="";//ระเบียนบ้างอิง id ลูกค้าเช่น username
+$database_pointfield="";//ระเบียนที่ต้องการให้อัพเดทยอด point ลูกค้า
+
 
 //ตัวคูณเครดิตรสำหรับทรูวอเลท
 $mul=1;
@@ -67,6 +72,24 @@ function my_ip(){
 		return $IP;
 }
 
+switch ($database_type) {
+	case 1:
+		$conn=mysql_connect($sql_server,$sql_user,$sql_password) or die("connect database error!");
+		mysql_select_db($sql_database) or die("select database error!");
+	break;
+		
+	case 2:
+		$conn=mysqli_connect($sql_server,$sql_user,$sql_password,$sql_database) or die("Error Database is not connect!");
+	break;
+		
+	case 3:
+		$conn=mysqli_connect($sql_server,$sql_user,$sql_password,$sql_database) or die("Error Database is not connect!");
+	break;
+		
+	case 4:
+		$connect_db=odbc_connect('Driver={SQL Server};Server=' .$sql_server. ';Database=' . $sql_database. ';' ,$sql_user, $sql_password) or die('ไม่สามรถเชื่อมต่อฐานข้อมูลได้');
+	break;
+}
 
 $conn=mysql_connect($sql_server,$sql_user,$sql_password) or die("connect database error!");
 mysql_select_db($sql_database) or die("select database error!");
@@ -104,7 +127,24 @@ if($_POST[send]){
 			//ยอดสำเร็จที่ถูกเช็คจากบัตรทรูมันนี่
 			$point=$truemoney_set[$money_total];
 		}
-		mysql_query("update  set =+$point where ='$_POST[ref1]' ");
+		switch ($database_type) {
+			case 1:
+				mysql_query("update $database_table set $database_pointfield = $database_pointfield + $point where $database_idfield='$_POST[ref1]' ");
+			break;
+		
+			case 2:
+				mysqli_query($conn,"update $database_table set $database_pointfield = $database_pointfield + $point where $database_idfield='$_POST[ref1]' ");
+			break;
+		
+			case 3:
+				mssql_query("update $database_table set $database_pointfield = $database_pointfield + $point where $database_idfield='$_POST[ref1]' ");
+			break;
+		
+			case 4:
+				odbc_exec($connect_db,"update $database_table set $database_pointfield = $database_pointfield + $point where $database_idfield='$_POST[ref1]' ");
+			break;
+		}
+		
 		echo "<p><h4 style='color:green'>เรียบร้อย</h4></p>
 		<p>จำนวนเงิน คือ $money_total บาท ได้รับ $point เครดิตร</p>
 		<p>ขอบคุณที่ใช้บริการครับ !  [ ปิดหน้านี้ได้เลย ]</p>";
