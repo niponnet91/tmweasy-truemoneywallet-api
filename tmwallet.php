@@ -8,7 +8,6 @@ $datenow=date("Y-m-d");
 $transaction_leng=14;
 $url_api="https://www.tmweasy.com/apiwallet.php";
 
-
 //-----------------------------------------config----------------------------------------------------
 //ข้อมูล https://www.tmweasy.com ต้องสมัครสมาชิกที่เว็บนี้ก่อนแล้วเอา id มาใส
 $tmapi_user="xxx"; // Username
